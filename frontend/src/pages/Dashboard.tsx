@@ -40,8 +40,6 @@ const Dashboard: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const chartRef = useRef(null)
 
   useEffect(() => {
     // ProtectedRoute已经处理了认证检查，这里只需要获取用户信息
