@@ -1,14 +1,18 @@
 import React from 'react'
 import { Navigate, Outlet } from 'react-router-dom'
-// import { AuthService } from '../utils/auth'
+import { AuthService } from '../utils/auth'
 
-const isAuthenticated = () => {
-  // 这里可以换成更复杂的逻辑，比如检查token是否过期
-  return localStorage.getItem('token') !== null
+interface ProtectedRouteProps {
+  children: React.ReactNode;
 }
 
-const ProtectedRoute: React.FC = () => {
-  return isAuthenticated() ? <Outlet /> : <Navigate to="/login" />
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+  if (AuthService.isAuthenticated()) {
+    return <>{children}</>;
+  }
+  
+  // 如果未认证，则重定向到登录页
+  return <Navigate to="/login" replace />;
 }
 
 export default ProtectedRoute 

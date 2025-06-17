@@ -58,7 +58,7 @@ const WeChatModal = ({ isOpen, onClose }: WeChatModalProps) => {
 
 const Login: React.FC = () => {
   const [phone, setPhone] = useState('')
-  const [password, setPassword] = useState('')
+  // const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
