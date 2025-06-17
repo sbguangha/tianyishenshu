@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import {
-  CalendarDaysIcon,
-  // ClockIcon
-} from '@heroicons/react/24/outline'
+// import {
+//   CalendarDaysIcon,
+//   // ClockIcon
+// } from '@heroicons/react/24/outline'
 // import { Lunar, Solar } from 'lunar-javascript'
 // import type { Solar } from 'lunar-javascript'
 import RegionSelector from '../components/RegionSelector'
@@ -76,10 +76,10 @@ const UserForm = () => {
     // Temporarily disabled for Vercel deployment
   }
 
-  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setProfile(prev => ({ ...prev, [name]: value }))
-  }
+  // const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const { name, value } = e.target
+  //   setProfile(prev => ({ ...prev, [name]: value }))
+  // }
 
   // 提交表单
   const handleSubmit = async (e: React.FormEvent) => {
