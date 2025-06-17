@@ -56,21 +56,21 @@ const WeChatModal = ({ isOpen, onClose }: WeChatModalProps) => {
   )
 }
 
-const Login = () => {
-  const navigate = useNavigate()
-  
-  // 表单状态
+const Login: React.FC = () => {
   const [phone, setPhone] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const navigate = useNavigate()
+
+  // 表单状态
   const [verifyCode, setVerifyCode] = useState('')
   const [exchangeCode, setExchangeCode] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
   
   // UI状态
-  const [isLoading, setIsLoading] = useState(false)
   const [showWeChatModal, setShowWeChatModal] = useState(false)
   const [countdown, setCountdown] = useState(0)
-  const [errors, setErrors] = useState<{[key: string]: string}>({})
-  
+
   // 验证码倒计时
   useEffect(() => {
     if (countdown > 0) {
@@ -108,11 +108,9 @@ const Login = () => {
   // 发送验证码
   const handleSendCode = async () => {
     if (!validatePhone(phone)) {
-      setErrors({ phone: '请输入正确的手机号' })
       return
     }
 
-    setErrors({})
     setCountdown(60)
     
     try {
@@ -132,7 +130,6 @@ const Login = () => {
     } catch (error) {
       console.error('发送验证码错误:', error)
       setCountdown(0)
-      setErrors({ code: '发送验证码失败，请重试' })
     }
   }
 
@@ -151,13 +148,10 @@ const Login = () => {
         })
         
         if (!response.ok) {
-          setErrors({ exchangeCode: '兑换码无效' })
-        } else {
-          setErrors({ ...errors, exchangeCode: '' })
+          console.error('兑换码无效')
         }
       } catch (error) {
         console.error('验证兑换码错误:', error)
-        setErrors({ exchangeCode: '验证兑换码失败' })
       }
     }
   }
@@ -193,12 +187,10 @@ const Login = () => {
     }
     
     if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors)
       return
     }
 
-    setIsLoading(true)
-    setErrors({})
+    setLoading(true)
 
     try {
       const response = await fetch('/api/auth/verify-login', {
@@ -230,9 +222,8 @@ const Login = () => {
       
     } catch (error) {
       console.error('登录错误:', error)
-      setErrors({ submit: '登录失败，请检查手机号和验证码' })
     } finally {
-      setIsLoading(false)
+      setLoading(false)
     }
   }
 
@@ -305,7 +296,6 @@ const Login = () => {
                     placeholder="请输入手机号"
                   />
                 </div>
-                {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
               </div>
 
               <div className="flex space-x-3">
@@ -323,7 +313,6 @@ const Login = () => {
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent lg:text-lg"
                     placeholder="6位验证码"
                   />
-                  {errors.verifyCode && <p className="mt-1 text-sm text-red-600">{errors.verifyCode}</p>}
                 </div>
                 <div className="flex flex-col justify-end">
                   <button
@@ -336,7 +325,6 @@ const Login = () => {
                   </button>
                 </div>
               </div>
-              {errors.code && <p className="text-sm text-red-600">{errors.code}</p>}
             </div>
 
             {/* 兑换码输入 */}
@@ -365,8 +353,7 @@ const Login = () => {
                     粘贴
                   </button>
                 </div>
-                {errors.exchangeCode && <p className="mt-1 text-sm text-red-600">{errors.exchangeCode}</p>}
-                {exchangeCode && validateExchangeCode(exchangeCode) && !errors.exchangeCode && (
+                {exchangeCode && validateExchangeCode(exchangeCode) && (
                   <p className="mt-1 text-sm text-green-600">✓ 兑换码格式正确</p>
                 )}
               </div>
@@ -398,19 +385,14 @@ const Login = () => {
               添加客服微信
             </button>
 
-            {/* 提交错误 */}
-            {errors.submit && (
-              <div className="text-center text-red-600 text-sm lg:text-base">{errors.submit}</div>
-            )}
-
             {/* 提交按钮 */}
             <div>
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={loading}
                 className="w-full bg-black text-white py-4 px-4 rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-lg lg:text-xl lg:py-5 flex items-center justify-center"
               >
-                {isLoading ? (
+                {loading ? (
                   <>
                     <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

@@ -33,7 +33,6 @@ const PersonalityReport = () => {
   const [isRenaming, setIsRenaming] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const reportRef = useRef<HTMLDivElement>(null)
 
   // 滚动到消息底部
   const scrollToBottom = () => {
@@ -42,7 +41,7 @@ const PersonalityReport = () => {
 
   // 滚动到页面顶部
   const scrollToTop = () => {
-    reportRef.current?.scrollIntoView({ behavior: 'smooth' })
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   // 加载用户信息
@@ -485,7 +484,7 @@ const PersonalityReport = () => {
       {/* 主内容区域 */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* 报告展示区域 */}
-        <div ref={reportRef} className="flex-1 overflow-y-auto bg-white">
+        <div className="flex-1 overflow-y-auto bg-white">
           <div className="max-w-4xl mx-auto p-8">
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">性格分析报告</h1>
