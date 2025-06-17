@@ -1,7 +1,17 @@
-import 'chart.js/auto'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { AuthService } from '../utils/auth'
+import { Bar, Pie } from 'react-chartjs-2'
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+} from 'chart.js'
 import {
   UserIcon,
   ChartBarIcon,
@@ -15,10 +25,23 @@ import {
   PlusIcon
 } from '@heroicons/react/24/outline'
 
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend
+)
+
 const Dashboard: React.FC = () => {
   const [userNickname, setUserNickname] = useState('用户')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const navigate = useNavigate()
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const chartRef = useRef(null)
 
   useEffect(() => {
     // ProtectedRoute已经处理了认证检查，这里只需要获取用户信息
@@ -37,6 +60,16 @@ const Dashboard: React.FC = () => {
     } else if (user) {
       setUserNickname(user.phone || '用户')
     }
+
+    const fetchProfileAndGenerateReport = async () => {
+      try {
+        // ... existing code ...
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProfileAndGenerateReport()
   }, [])
 
   // 退出登录
@@ -62,6 +95,69 @@ const Dashboard: React.FC = () => {
     { title: '运势报告', icon: SparklesIcon, description: '流年运势，月运分析', color: 'bg-indigo-500' },
     { title: '旺运商城', icon: ShoppingBagIcon, description: '开运用品，风水摆件', color: 'bg-orange-500' },
   ]
+
+  if (loading) {
+    return (
+      <div className="flex-1 overflow-y-auto p-4 md:p-8">
+        <main>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="md:col-span-2 lg:col-span-3 p-6 bg-white rounded-lg shadow-md">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">分析概览</h2>
+              <div style={{ height: '400px' }}>
+                <Bar
+                  data={{
+                    labels: ['外向性', '严谨性', '开放性', '宜人性', '神经质'],
+                    datasets: [
+                      {
+                        label: '得分',
+                        data: [85, 72, 68, 90, 40],
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1,
+                      },
+                    ],
+                  }}
+                  options={{
+                    maintainAspectRatio: false,
+                    responsive: true,
+                    plugins: {
+                      legend: { position: 'top' },
+                      title: { display: true, text: '五大人格维度得分' },
+                    },
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="p-6 bg-white rounded-lg shadow-md">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">性格类型</h2>
+              <div style={{ height: '200px' }}>
+                <Pie
+                  data={{
+                    labels: ['社交型', '思考型', '艺术型'],
+                    datasets: [
+                      {
+                        data: [45, 35, 20],
+                        backgroundColor: [
+                          'rgba(255, 99, 132, 0.6)',
+                          'rgba(54, 162, 235, 0.6)',
+                          'rgba(255, 206, 86, 0.6)',
+                        ],
+                      },
+                    ],
+                  }}
+                  options={{
+                    maintainAspectRatio: false,
+                    responsive: true,
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    )
+  }
 
   return (
     <div className="fixed inset-0 w-screen h-screen bg-gray-50 flex overflow-hidden">
