@@ -1,0 +1,245 @@
+.region-selector {
+  position: relative;
+  width: 100%;
+}
+
+.region-input {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border: 2px solid #e1e5e9;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-height: 48px;
+}
+
+.region-input:hover {
+  border-color: #667eea;
+}
+
+.region-input.disabled {
+  background: #f5f5f5;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.region-input .selected {
+  color: #333;
+  font-weight: 500;
+}
+
+.region-input .placeholder {
+  color: #999;
+}
+
+.region-input .arrow {
+  color: #666;
+  font-size: 12px;
+  transition: transform 0.3s ease;
+}
+
+.region-input .arrow.up {
+  transform: rotate(180deg);
+}
+
+.region-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #e1e5e9;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  max-height: 400px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.search-box {
+  padding: 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.search-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #e1e5e9;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+.search-input:focus {
+  border-color: #667eea;
+}
+
+.search-results {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.section-title {
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #666;
+  background: #f8f9fa;
+  font-weight: 500;
+}
+
+.search-result-item {
+  padding: 10px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #f5f5f5;
+  transition: background-color 0.2s ease;
+}
+
+.search-result-item:hover {
+  background: #f8f9fa;
+}
+
+.search-result-item:last-child {
+  border-bottom: none;
+}
+
+.result-name {
+  font-weight: 500;
+  color: #333;
+  margin-right: 8px;
+}
+
+.result-full-name {
+  font-size: 12px;
+  color: #666;
+}
+
+.cascade-selector {
+  display: flex;
+  height: 300px;
+}
+
+.selector-column {
+  flex: 1;
+  border-right: 1px solid #f0f0f0;
+  display: flex;
+  flex-direction: column;
+}
+
+.selector-column:last-child {
+  border-right: none;
+}
+
+.column-title {
+  padding: 12px;
+  background: #f8f9fa;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  border-bottom: 1px solid #f0f0f0;
+  text-align: center;
+}
+
+.options-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.option-item {
+  padding: 10px 12px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+  border-bottom: 1px solid #f8f8f8;
+  transition: all 0.2s ease;
+}
+
+.option-item:hover {
+  background: #f0f4ff;
+  color: #667eea;
+}
+
+.option-item.selected {
+  background: #667eea;
+  color: white;
+  font-weight: 500;
+}
+
+.option-item:last-child {
+  border-bottom: none;
+}
+
+.loading, .no-data {
+  padding: 20px;
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+}
+
+.loading {
+  color: #667eea;
+}
+
+/* 滚动条样式 */
+.options-list::-webkit-scrollbar,
+.search-results::-webkit-scrollbar {
+  width: 6px;
+}
+
+.options-list::-webkit-scrollbar-track,
+.search-results::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.options-list::-webkit-scrollbar-thumb,
+.search-results::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.options-list::-webkit-scrollbar-thumb:hover,
+.search-results::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .cascade-selector {
+    flex-direction: column;
+    height: auto;
+    max-height: 300px;
+  }
+  
+  .selector-column {
+    border-right: none;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .selector-column:last-child {
+    border-bottom: none;
+  }
+  
+  .options-list {
+    max-height: 120px;
+  }
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.region-dropdown {
+  animation: fadeIn 0.3s ease;
+} 
