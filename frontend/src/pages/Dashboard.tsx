@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react'
+import 'chart.js/auto'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { AuthService } from '../utils/auth'
 import {
@@ -14,7 +15,7 @@ import {
   PlusIcon
 } from '@heroicons/react/24/outline'
 
-const Dashboard = () => {
+const Dashboard: React.FC = () => {
   const [userNickname, setUserNickname] = useState('用户')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const navigate = useNavigate()

@@ -72,7 +72,7 @@ const PersonalityReport = () => {
 
   // 点击外部关闭下拉菜单
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (_event: MouseEvent) => {
       if (showDropdown) {
         setShowDropdown(null)
       }

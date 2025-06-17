@@ -1,6 +1,11 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Lunar, Solar } from 'lunar-javascript'
+import {
+  CalendarDaysIcon,
+  // ClockIcon
+} from '@heroicons/react/24/outline'
+// import { Lunar, Solar } from 'lunar-javascript'
+// import type { Solar } from 'lunar-javascript'
 import RegionSelector from '../components/RegionSelector'
 import { AuthService } from '../utils/auth'
 
@@ -28,13 +33,6 @@ interface UserProfile {
     monthInChinese: string
     dayInChinese: string
   }
-}
-
-interface LunarConvertData {
-  year: number
-  month: number
-  day: number
-  isLeap: boolean
 }
 
 const UserForm = () => {
@@ -75,51 +73,12 @@ const UserForm = () => {
 
   // 处理农历转换
   const handleLunarConvert = () => {
-    try {
-      const lunar = Lunar.fromYmd(lunarInput.year, lunarInput.month, lunarInput.day)
-      if (lunarInput.isLeap) {
-        // 处理闰月
-        const leapMonth = lunar.getYear().getLeapMonth()
-        if (leapMonth === lunarInput.month) {
-          const solar = lunar.getSolar()
-          setProfile(prev => ({
-            ...prev,
-            birthYear: solar.getYear(),
-            birthMonth: solar.getMonth(),
-            birthDay: solar.getDay(),
-            lunarInfo: {
-              year: lunarInput.year,
-              month: lunarInput.month,
-              day: lunarInput.day,
-              isLeap: true,
-              yearInChinese: lunar.getYearInChinese(),
-              monthInChinese: `闰${lunar.getMonthInChinese()}`,
-              dayInChinese: lunar.getDayInChinese()
-            }
-          }))
-        }
-      } else {
-        const solar = lunar.getSolar()
-        setProfile(prev => ({
-          ...prev,
-          birthYear: solar.getYear(),
-          birthMonth: solar.getMonth(),
-          birthDay: solar.getDay(),
-          lunarInfo: {
-            year: lunarInput.year,
-            month: lunarInput.month,
-            day: lunarInput.day,
-            isLeap: false,
-            yearInChinese: lunar.getYearInChinese(),
-            monthInChinese: lunar.getMonthInChinese(),
-            dayInChinese: lunar.getDayInChinese()
-          }
-        }))
-      }
-      setShowLunarModal(false)
-    } catch (error) {
-      alert('农历日期转换失败，请检查输入的日期是否正确')
-    }
+    // Temporarily disabled for Vercel deployment
+  }
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setProfile(prev => ({ ...prev, [name]: value }))
   }
 
   // 提交表单
