@@ -56,6 +56,8 @@ const WeChatModal = ({ isOpen, onClose }: WeChatModalProps) => {
   )
 }
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
 const Login: React.FC = () => {
   const [phone, setPhone] = useState('')
   // const [password, setPassword] = useState('')
@@ -114,8 +116,7 @@ const Login: React.FC = () => {
     setCountdown(60)
     
     try {
-      // 预留API接口
-      const response = await fetch('/api/auth/send-sms', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/send-sms`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone })
@@ -140,8 +141,7 @@ const Login: React.FC = () => {
     
     if (formatted.length === 16 && validateExchangeCode(formatted)) {
       try {
-        // 预留API接口 - 实时验证兑换码
-        const response = await fetch('/api/auth/validate-exchange-code', {
+        const response = await fetch(`${API_BASE_URL}/api/auth/validate-exchange-code`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ exchangeCode: formatted })
@@ -193,7 +193,7 @@ const Login: React.FC = () => {
     setLoading(true)
 
     try {
-      const response = await fetch('/api/auth/verify-login', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/verify-login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

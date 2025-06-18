@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react'
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
 interface ExchangeCode {
   id: string
   code: string
@@ -38,7 +40,7 @@ const Admin: React.FC = () => {
     setError('')
 
     try {
-      const response = await fetch('/api/admin/auth', {
+      const response = await fetch(`${API_BASE_URL}/api/admin/auth`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -67,7 +69,7 @@ const Admin: React.FC = () => {
   const loadCodes = async (token?: string) => {
     try {
       const authToken = token || adminToken
-      const response = await fetch(`/api/admin/codes?status=${filter}`, {
+      const response = await fetch(`${API_BASE_URL}/api/admin/codes?status=${filter}`, {
         headers: {
           'Authorization': `Bearer ${authToken}`,
         },
@@ -93,7 +95,7 @@ const Admin: React.FC = () => {
     setSuccess('')
 
     try {
-      const response = await fetch('/api/admin/generate-code', {
+      const response = await fetch(`${API_BASE_URL}/api/admin/generate-code`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${adminToken}`,
@@ -128,7 +130,7 @@ const Admin: React.FC = () => {
     if (!confirm('确定要删除这个兑换码吗？')) return
 
     try {
-      const response = await fetch(`/api/admin/codes/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/admin/codes/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${adminToken}`,
