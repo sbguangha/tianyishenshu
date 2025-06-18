@@ -2,6 +2,11 @@ import mongoose from 'mongoose'
 import dns from 'dns'
 
 export const connectDatabase = async (): Promise<void> => {
+  // 如果已经连接或正在连接，则直接返回，避免重复连接
+  if (mongoose.connection.readyState >= 1) {
+    return
+  }
+
   try {
     const mongoUri = process.env.MONGODB_URI
     
@@ -15,9 +20,12 @@ export const connectDatabase = async (): Promise<void> => {
       dns.setServers(['8.8.8.8', '1.1.1.1'])
     }
     
+    // 增加日志，便于调试
+    console.log('⏳ 尝试连接到 MongoDB...')
     await mongoose.connect(mongoUri, {
-      serverSelectionTimeoutMS: 15000, // 增加超时以适应网络延迟
-      connectTimeoutMS: 10000,
+      serverSelectionTimeoutMS: 30000, // 增加超时以适应Serverless环境的冷启动
+      connectTimeoutMS: 20000,
+      bufferCommands: false, // 如果未连接，让操作快速失败
     })
         
     console.log('✅ MongoDB 连接成功')
@@ -27,12 +35,8 @@ export const connectDatabase = async (): Promise<void> => {
     
   } catch (error) {
     console.error('❌ 数据库连接失败:', error)
-    if (process.env.NODE_ENV === 'production') {
-      // 在生产环境中，如果数据库连接失败，则退出进程
-      process.exit(1)
-    }
-    // 在开发环境中，允许在无数据库模式下继续运行
-    console.warn('⚠️ 应用将在无数据库模式下运行。')
+    // 在Serverless环境中，我们应该抛出错误来中止当前调用
+    throw error
   }
 }
 
