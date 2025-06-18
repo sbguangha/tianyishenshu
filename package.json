@@ -1,7 +1,12 @@
 {
   "name": "tianyishenshu",
+  "private": true,
   "version": "1.0.0",
   "description": "命理分析Web应用",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
   "main": "index.js",
   "scripts": {
     "install-all": "npm install && cd frontend && npm install && cd ../backend && npm install",
