@@ -35,8 +35,8 @@ export const connectDatabase = async (): Promise<void> => {
     
   } catch (error) {
     console.error('❌ 数据库连接失败:', error)
-    // 在Serverless环境中，我们应该抛出错误来中止当前调用
-    throw error
+    // 在传统的服务器环境中，如果启动时数据库连接失败，我们应该直接退出进程
+    process.exit(1)
   }
 }
 
