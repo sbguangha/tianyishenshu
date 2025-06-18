@@ -30,6 +30,17 @@ router.use('/region', regionRoutes)
 // Coze AI路由
 router.use('/coze', cozeRoutes)
 
+// 健康检查端点
+router.get('/health', (req: Request, res: Response) => {
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    // 在这里我们无法直接访问 process.uptime()，但这对健康检查来说不是核心信息
+    // 我们可以返回一个固定的值或省略它。为了简单起见，我们返回一个简单状态。
+    environment: process.env.NODE_ENV || 'development'
+  });
+})
+
 // 根路径信息
 router.get('/', (req: Request, res: Response) => {
   res.status(200).json({
