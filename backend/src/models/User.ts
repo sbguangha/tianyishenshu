@@ -15,6 +15,12 @@ export interface IUser extends Document {
   isSuperUser: boolean;
   createdAt: Date;
   updatedAt: Date;
+  password?: string;
+  nickname?: string;
+  birthday?: Date;
+  lastLoginAt?: Date;
+  smsCode?: string;
+  smsCodeExpires?: Date;
 }
 
 // 定义用户 Schema
@@ -47,6 +53,12 @@ const UserSchema = new Schema<IUser>({
     type: Boolean,
     default: false,
   },
+  password: { type: String },
+  nickname: { type: String },
+  birthday: { type: Date },
+  lastLoginAt: { type: Date, default: Date.now },
+  smsCode: { type: String },
+  smsCodeExpires: { type: Date },
 }, {
   timestamps: true, // 自动添加 createdAt 和 updatedAt
 });

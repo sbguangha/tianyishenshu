@@ -1,46 +1,254 @@
-import express from 'express'
+import express, { Request, Response } from 'express'
 import jwt from 'jsonwebtoken'
 import { validateInput } from 'middleware/validation'
-import { Request, Response } from 'express'
 import { validateExchangeCode, markCodeAsUsed } from './admin'
 import { JWT_CONFIG } from 'config/jwtConfig'
 import User from 'models/User'
+import bcrypt from 'bcryptjs'
+import { body, validationResult } from 'express-validator'
+import tencentcloud from 'tencentcloud-sdk-nodejs'
 
 const router = express.Router()
 
-// 发送短信验证码
-router.post('/send-sms', validateInput, async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { phone } = req.body
+// --- 腾讯云SMS客户端初始化 ---
+const TcsClient = tencentcloud.sms.v20210111.Client
 
-    // 手机号格式验证
-    const phoneRegex = /^1[3-9]\d{9}$/
-    if (!phoneRegex.test(phone)) {
-      res.status(400).json({ error: '手机号格式不正确' })
-      return
+const clientConfig = {
+  credential: {
+    secretId: process.env.TENCENT_SECRET_ID!,
+    secretKey: process.env.TENCENT_SECRET_KEY!,
+  },
+  region: "ap-guangzhou", // 默认区域，如果您的应用在其他区域，请修改
+  profile: {
+    httpProfile: {
+      endpoint: "sms.tencentcloudapi.com",
+    },
+  },
+}
+
+// 仅在提供了密钥时初始化客户端
+const smsClient = 
+  process.env.TENCENT_SECRET_ID &&
+  process.env.TENCENT_SECRET_KEY &&
+  process.env.TENCENT_SMS_SDK_APP_ID &&
+  process.env.TENCENT_SMS_SIGN_NAME &&
+  process.env.TENCENT_SMS_TEMPLATE_ID
+  ? new TcsClient(clientConfig) 
+  : null
+
+// --- 发送短信验证码 ---
+router.post(
+  '/send-sms-code',
+  body('phone').isMobilePhone('zh-CN').withMessage('无效的手机号码'),
+  async (req: Request, res: Response) => {
+    if (!smsClient) {
+      return res.status(500).json({ message: '短信服务未正确配置' })
+    }
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() })
     }
 
-    // TODO: 集成腾讯云短信服务
-    // 目前返回模拟成功响应
-    console.log(`模拟发送验证码到手机: ${phone}`)
-    
-    // 模拟生成6位验证码
-    const verifyCode = Math.floor(100000 + Math.random() * 900000).toString()
-    console.log(`生成的验证码: ${verifyCode}`)
+    const { phone } = req.body
+    const code = Math.floor(100000 + Math.random() * 900000).toString() // 生成6位验证码
+    const codeExpires = new Date(Date.now() + 5 * 60 * 1000) // 5分钟后过期
 
-    // TODO: 将验证码存储到Redis或数据库中，设置5分钟过期时间
-    
-    res.json({ 
-      success: true, 
-      message: '验证码已发送',
-      // 开发环境下返回验证码，生产环境下不返回
-      ...(process.env.NODE_ENV === 'development' && { code: verifyCode })
-    })
-  } catch (error) {
-    console.error('发送短信验证码错误:', error)
-    res.status(500).json({ error: '发送验证码失败' })
+    try {
+      const params = {
+        SmsSdkAppId: process.env.TENCENT_SMS_SDK_APP_ID!,
+        SignName: process.env.TENCENT_SMS_SIGN_NAME!,
+        TemplateId: process.env.TENCENT_SMS_TEMPLATE_ID!,
+        PhoneNumberSet: [`+86${phone}`],
+        TemplateParamSet: [code],
+      }
+
+      const sendResult = await smsClient.SendSms(params)
+      
+      if (sendResult.SendStatusSet && sendResult.SendStatusSet[0].Code === 'Ok') {
+        let user = await User.findOne({ phone })
+        if (!user) {
+          user = new User({ phone })
+        }
+        user.smsCode = code
+        user.smsCodeExpires = codeExpires
+        await user.save()
+
+        res.status(200).json({ message: '验证码已发送' })
+      } else {
+        const errorMessage = sendResult.SendStatusSet ? sendResult.SendStatusSet[0].Message : '未知错误'
+        console.error("腾讯云短信发送失败:", sendResult.SendStatusSet ? sendResult.SendStatusSet[0] : '无响应')
+        res.status(500).json({ message: '短信发送失败', error: errorMessage })
+      }
+    } catch (error) {
+      console.error('发送验证码时出错:', error)
+      res.status(500).json({ message: '服务器内部错误' })
+    }
   }
-})
+)
+
+// --- 短信验证码登录 ---
+router.post(
+  '/login-with-sms',
+  [
+    body('phone').isMobilePhone('zh-CN').withMessage('无效的手机号码'),
+    body('code').isLength({ min: 6, max: 6 }).withMessage('验证码必须是6位'),
+  ],
+  async (req: Request, res: Response) => {
+    if (!process.env.JWT_SECRET) {
+        return res.status(500).json({ message: 'JWT密钥未配置' })
+    }
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() })
+    }
+
+    const { phone, code } = req.body
+
+    try {
+      const user = await User.findOne({ phone, smsCode: code, smsCodeExpires: { $gt: new Date() } })
+
+      if (!user) {
+        return res.status(400).json({ message: '验证码错误或已过期' })
+      }
+
+      console.log(`[Login] User found: ${user.phone}. Roles: ${user.roles.join(', ')}`);
+      const superAdminPhone = process.env.SUPER_ADMIN_PHONE;
+      console.log(`[Login] Checking against SUPER_ADMIN_PHONE: ${superAdminPhone}`);
+
+      if (phone === superAdminPhone) {
+        console.log(`[Login] Matched SUPER_ADMIN_PHONE. Granting admin role.`);
+        if (!user.roles.includes('admin')) {
+          user.roles.push('admin');
+        }
+      }
+      
+      user.lastLoginAt = new Date()
+      user.smsCode = undefined // 清除已使用的验证码
+      user.smsCodeExpires = undefined
+      await user.save()
+
+      // 创建JWT
+      const userPayload = { id: user.id, phone: user.phone, roles: user.roles }
+      const token = jwt.sign(
+        userPayload,
+        process.env.JWT_SECRET,
+        { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+      )
+
+      res.status(200).json({
+        message: "登录成功",
+        token,
+        user: userPayload
+      })
+
+    } catch (error) {
+      console.error('短信登录时出错:', error)
+      res.status(500).json({ message: '服务器内部错误' })
+    }
+  }
+)
+
+// --- 用户名密码注册 ---
+router.post(
+  '/register',
+  [
+    body('phone').isMobilePhone('zh-CN').withMessage('无效的手机号码'),
+    body('password').isLength({ min: 6 }).withMessage('密码至少需要6位'),
+  ],
+  async (req: Request, res: Response) => {
+    if (!process.env.JWT_SECRET) {
+        return res.status(500).json({ message: 'JWT密钥未配置' })
+    }
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() })
+    }
+
+    const { phone, password } = req.body
+
+    try {
+      let user = await User.findOne({ phone })
+      if (user) {
+        return res.status(400).json({ message: '该手机号已被注册' })
+      }
+
+      const salt = await bcrypt.genSalt(10)
+      const hashedPassword = await bcrypt.hash(password, salt)
+
+      user = new User({
+        phone,
+        password: hashedPassword,
+      })
+
+      if (phone === process.env.SUPER_ADMIN_PHONE) {
+        user.roles.push('admin')
+      }
+
+      await user.save()
+      
+      const userPayload = { id: user.id, phone: user.phone, roles: user.roles }
+      const token = jwt.sign(
+        userPayload,
+        process.env.JWT_SECRET,
+        { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+      )
+
+      res.status(201).json({ message: '注册成功', token, user: userPayload })
+
+    } catch (error) {
+      console.error('注册时出错:', error)
+      res.status(500).json({ message: '服务器内部错误' })
+    }
+  }
+)
+
+// --- 用户名密码登录 ---
+router.post(
+  '/login',
+  [
+    body('phone').isMobilePhone('zh-CN').withMessage('无效的手机号码'),
+    body('password').not().isEmpty().withMessage('密码不能为空'),
+  ],
+  async (req: Request, res: Response) => {
+    if (!process.env.JWT_SECRET) {
+        return res.status(500).json({ message: 'JWT密钥未配置' })
+    }
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() })
+    }
+
+    const { phone, password } = req.body
+
+    try {
+      const user = await User.findOne({ phone })
+      if (!user || !user.password) {
+        return res.status(401).json({ message: '手机号或密码错误' })
+      }
+
+      const isMatch = await bcrypt.compare(password, user.password)
+      if (!isMatch) {
+        return res.status(401).json({ message: '手机号或密码错误' })
+      }
+
+      user.lastLoginAt = new Date()
+      await user.save()
+
+      const userPayload = { id: user.id, phone: user.phone, roles: user.roles }
+      const token = jwt.sign(
+        userPayload,
+        process.env.JWT_SECRET,
+        { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+      )
+
+      res.status(200).json({ message: '登录成功', token, user: userPayload })
+
+    } catch (error) {
+      console.error('登录时出错:', error)
+      res.status(500).json({ message: '服务器内部错误' })
+    }
+  }
+)
 
 // 验证兑换码
 router.post('/validate-exchange-code', validateInput, async (req: Request, res: Response): Promise<void> => {

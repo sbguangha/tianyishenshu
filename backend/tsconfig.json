@@ -1,32 +1,29 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "lib": ["ES2020"],
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "baseUrl": "./src",
-    "rootDir": "./src",
+    "target": "es6",
+    "module": "commonjs",
     "outDir": "./dist",
+    "rootDir": "./src",
     "strict": true,
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "removeComments": true,
-    "noImplicitAny": true,
-    "noImplicitThis": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "typeRoots": ["./node_modules/@types", "./src/types"]
+    "baseUrl": ".",
+    "paths": {
+      "*": ["node_modules/*"],
+      "config/*": ["src/config/*"],
+      "controllers/*": ["src/controllers/*"],
+      "data/*": ["src/data/*"],
+      "middleware/*": ["src/middleware/*"],
+      "models/*": ["src/models/*"],
+      "routes/*": ["src/routes/*"],
+      "services/*": ["src/services/*"],
+      "types/*": ["src/types/*"],
+      "utils/*": ["src/utils/*"]
+    }
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "**/*.test.ts"]
 } 
