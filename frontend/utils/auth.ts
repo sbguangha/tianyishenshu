@@ -67,6 +67,7 @@ export const useAuth = (): AuthContextType => {
   return context;
 };
 
+// Kept for compatibility if some parts of the app still use it.
 export const AuthService = {
   getToken: (): string | null => localStorage.getItem('token'),
   getUser: (): User | null => {
@@ -87,4 +88,4 @@ export const AuthService = {
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
   }
-};
+}; 

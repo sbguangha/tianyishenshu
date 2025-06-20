@@ -1,4 +1,5 @@
-import { Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
+import { AuthProvider } from './utils/auth'
 import Layout from './components/Layout'
 import ProtectedRoute from './components/ProtectedRoute'
 import Home from './pages/Home'
@@ -16,43 +17,42 @@ import PersonalityReport from './pages/PersonalityReport'
 
 function App() {
   return (
-    <Routes>
-      {/* 公开路由 */}
-      <Route path="/login" element={<Login />} />
-      <Route path="/admin-panel-2024" element={<Admin />} />
-      
-      {/* 需要登录的路由 */}
-      <Route path="/user-form" element={
-        <ProtectedRoute>
-          <UserForm />
-        </ProtectedRoute>
-      } />
-      <Route path="/dashboard" element={
-        <ProtectedRoute>
-          <Dashboard />
-        </ProtectedRoute>
-      } />
-      <Route path="/personality-report" element={
-        <ProtectedRoute>
-          <PersonalityReport />
-        </ProtectedRoute>
-      } />
-      
-      {/* 其他公开路由 */}
-      <Route path="/*" element={
+    <Router>
+      <AuthProvider>
         <Layout>
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/user-form" element={<UserForm />} />
             <Route path="/analysis" element={<Analysis />} />
-            <Route path="/about" element={<About />} />
+            <Route path="/report" element={<PersonalityReport />} />
+            
+            <Route 
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route 
+              path="/admin"
+              element={
+                <ProtectedRoute roles={['admin']}>
+                  <Admin />
+                </ProtectedRoute>
+              }
+            />
+
             <Route path="/products" element={<Products />} />
             <Route path="/learn" element={<Learn />} />
             <Route path="/shop" element={<Shop />} />
             <Route path="/news" element={<News />} />
           </Routes>
         </Layout>
-      } />
-    </Routes>
+      </AuthProvider>
+    </Router>
   )
 }
 
