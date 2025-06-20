@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>微信二维码测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .qr-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .qr-image {
+            max-width: 300px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+        }
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 微信二维码测试页面</h1>
+        
+        <div class="info">
+            <strong>测试说明：</strong><br>
+            此页面用于测试微信二维码图片是否能正常加载显示
+        </div>
+
+        <div class="qr-container">
+            <h3>📱 微信二维码</h3>
+            <img 
+                id="qrcode" 
+                src="/images/wechat-qrcode.jpg" 
+                alt="微信二维码" 
+                class="qr-image"
+                onload="showSuccess()"
+                onerror="showError()"
+            />
+        </div>
+
+        <div id="status"></div>
+
+        <div class="info">
+            <strong>文件路径：</strong> /images/wechat-qrcode.jpg<br>
+            <strong>实际位置：</strong> frontend/public/images/wechat-qrcode.jpg<br>
+            <strong>访问地址：</strong> <a href="/images/wechat-qrcode.jpg" target="_blank">点击直接访问图片</a>
+        </div>
+    </div>
+
+    <script>
+        function showSuccess() {
+            document.getElementById('status').innerHTML = `
+                <div style="background: #e8f5e8; color: #2e7d32; padding: 15px; border-radius: 5px; margin: 10px 0;">
+                    ✅ <strong>成功！</strong> 微信二维码加载正常
+                </div>
+            `;
+            console.log('微信二维码加载成功');
+        }
+
+        function showError() {
+            document.getElementById('status').innerHTML = `
+                <div class="error">
+                    ❌ <strong>错误！</strong> 微信二维码加载失败<br>
+                    可能原因：<br>
+                    1. 文件路径不正确<br>
+                    2. 文件不存在<br>
+                    3. 服务器配置问题
+                </div>
+            `;
+            console.error('微信二维码加载失败');
+        }
+
+        // 页面加载完成后的检查
+        window.onload = function() {
+            setTimeout(() => {
+                const img = document.getElementById('qrcode');
+                if (!img.complete || img.naturalHeight === 0) {
+                    showError();
+                }
+            }, 2000);
+        };
+    </script>
+</body>
+</html> 
