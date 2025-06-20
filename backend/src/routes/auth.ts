@@ -50,34 +50,62 @@ router.post(
     }
 
     const { phone } = req.body
-    const code = Math.floor(100000 + Math.random() * 900000).toString() // 生成6位验证码
     const codeExpires = new Date(Date.now() + 5 * 60 * 1000) // 5分钟后过期
-
+    
+    // 检查是否为超级管理员
+    const superAdminPhone = process.env.SUPER_ADMIN_PHONE;
+    const isSuperAdmin = phone === superAdminPhone;
+    
     try {
-      const params = {
-        SmsSdkAppId: process.env.TENCENT_SMS_SDK_APP_ID!,
-        SignName: process.env.TENCENT_SMS_SIGN_NAME!,
-        TemplateId: process.env.TENCENT_SMS_TEMPLATE_ID!,
-        PhoneNumberSet: [`+86${phone}`],
-        TemplateParamSet: [code],
-      }
-
-      const sendResult = await smsClient.SendSms(params)
+      let code: string;
       
-      if (sendResult.SendStatusSet && sendResult.SendStatusSet[0].Code === 'Ok') {
+      if (isSuperAdmin) {
+        // 超级管理员使用固定验证码（可以通过环境变量配置）
+        code = process.env.SUPER_ADMIN_SMS_CODE || '123456';
+        console.log(`[SMS] 超级管理员 ${phone} 请求验证码，使用固定验证码: ${code}`);
+        
+        // 直接保存验证码，不发送真实短信
         let user = await User.findOne({ phone })
         if (!user) {
           user = new User({ phone })
+          if (!user.roles.includes('admin')) {
+            user.roles.push('admin');
+          }
         }
         user.smsCode = code
         user.smsCodeExpires = codeExpires
         await user.save()
 
-        res.status(200).json({ message: '验证码已发送' })
+        res.status(200).json({ message: '验证码已发送（超级管理员测试模式）' })
       } else {
-        const errorMessage = sendResult.SendStatusSet ? sendResult.SendStatusSet[0].Message : '未知错误'
-        console.error("腾讯云短信发送失败:", sendResult.SendStatusSet ? sendResult.SendStatusSet[0] : '无响应')
-        res.status(500).json({ message: '短信发送失败', error: errorMessage })
+        // 普通用户生成随机验证码并发送真实短信
+        code = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        const params = {
+          SmsSdkAppId: process.env.TENCENT_SMS_SDK_APP_ID!,
+          SignName: process.env.TENCENT_SMS_SIGN_NAME!,
+          TemplateId: process.env.TENCENT_SMS_TEMPLATE_ID!,
+          PhoneNumberSet: [`+86${phone}`],
+          TemplateParamSet: [code],
+        }
+
+        const sendResult = await smsClient.SendSms(params)
+        
+        if (sendResult.SendStatusSet && sendResult.SendStatusSet[0].Code === 'Ok') {
+          let user = await User.findOne({ phone })
+          if (!user) {
+            user = new User({ phone })
+          }
+          user.smsCode = code
+          user.smsCodeExpires = codeExpires
+          await user.save()
+
+          res.status(200).json({ message: '验证码已发送' })
+        } else {
+          const errorMessage = sendResult.SendStatusSet ? sendResult.SendStatusSet[0].Message : '未知错误'
+          console.error("腾讯云短信发送失败:", sendResult.SendStatusSet ? sendResult.SendStatusSet[0] : '无响应')
+          res.status(500).json({ message: '短信发送失败', error: errorMessage })
+        }
       }
     } catch (error) {
       console.error('发送验证码时出错:', error)

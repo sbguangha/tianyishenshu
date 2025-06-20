@@ -67,6 +67,8 @@ export const useAuth = (): AuthContextType => {
   return context;
 };
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
 export const AuthService = {
   getToken: (): string | null => localStorage.getItem('token'),
   getUser: (): User | null => {
@@ -83,8 +85,30 @@ export const AuthService = {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
   },
+  clearAuth: (): void => {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+  },
   saveAuth: (token: string, user: User): void => {
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
+  },
+  authenticatedFetch: async (url: string, options: RequestInit = {}): Promise<Response> => {
+    const token = localStorage.getItem('token');
+    const defaultHeaders: HeadersInit = {
+      'Content-Type': 'application/json',
+    };
+    
+    if (token) {
+      defaultHeaders['Authorization'] = `Bearer ${token}`;
+    }
+    
+    return fetch(`${API_BASE_URL}${url}`, {
+      ...options,
+      headers: {
+        ...defaultHeaders,
+        ...options.headers,
+      },
+    });
   }
-};
+}; 
